@@ -7,7 +7,7 @@
 #include "app/demo_scene.h"
 #include "renderer/IRenderer.h"
 #include "renderer/CPURenderer/CPURendererBackend.h"
-#include "platform/WindowSurfaceAdapter.h"
+#include "renderer/VulkanRenderer/VulkanRendererBackend.h"
 
 #include <cmath>
 #include <memory>
@@ -24,7 +24,7 @@ int main()
 
     WindowSurfaceAdapter surface(window);
 
-    std::unique_ptr<IRenderer> renderer = std::make_unique<CpuRendererBackend>(surface);
+    std::unique_ptr<IRenderer> renderer = std::make_unique<VulkanRendererBackend>(surface);
     renderer->OnResize(width, height);
 
     Scene scene;
@@ -63,7 +63,6 @@ int main()
         }
 
         cam.UpdateView();
-
         UpdateScene(scene, t);
 
         uint32_t w, h; surface.GetSize(w, h);

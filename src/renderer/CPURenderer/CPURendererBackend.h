@@ -5,6 +5,7 @@
 #include "renderer/CPURenderer/frame_buffer.h"
 #include "renderer/IRenderer.h"
 #include "platform/IPresentSurface.h"
+#include "platform/WindowSurfaceAdapter.h"
 
 #include <cstdint>
 

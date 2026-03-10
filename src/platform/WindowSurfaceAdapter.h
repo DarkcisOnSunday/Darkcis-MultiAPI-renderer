@@ -4,7 +4,7 @@
 #include "platform/IPresentSurface.h"
 #include "DcisML/include/window.h"
 
-class WindowSurfaceAdapter final : public IPresentSurface {
+class WindowSurfaceAdapter final : public INativeWindowSurface {
 public:
     explicit WindowSurfaceAdapter(dcis::AppWindow& window)
         : window_(window) {}
@@ -26,6 +26,7 @@ public:
 
     void* GetNativeHwnd() const { return window_.GetNativeHwnd(); }
     void* GetNativeHinstance() const { return window_.GetNativeHinstance(); }
+    void* GetExtensions(uint32_t* extensions_count, bool debug) const {return window_.GetRequiredVulkanInstanceExtensions(extensions_count, debug); }
 
 private:
     dcis::AppWindow& window_;

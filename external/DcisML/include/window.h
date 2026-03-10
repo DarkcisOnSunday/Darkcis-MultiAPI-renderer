@@ -1,4 +1,5 @@
 #pragma once
+
 #include <cstdint>
 
 namespace dcis {
@@ -74,6 +75,9 @@ public:
     bool IsValid() const;
 
     bool ProcessAppWindowEvents();
+
+    const char** GetRequiredVulkanInstanceExtensions(uint32_t* exceptions_count, bool debug) const;
+    bool CreateVulkanSurface(void* vkInstance, void* allocator, void** outSurface) const;
 
     void* GetNativeHwnd() const;
     void* GetNativeHinstance() const;
