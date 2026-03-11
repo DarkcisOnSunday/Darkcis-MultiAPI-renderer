@@ -4,7 +4,7 @@
 
 class RenderPass {
 public:
-    void Create(VkDevice device, VkFormat swapchainFormat);
+    void Create(VkDevice device, VkFormat swapchainFormat, VkFormat depthFormat);
     void Destroy(VkDevice device);
 
     VkRenderPass Get() const { return pass_; }

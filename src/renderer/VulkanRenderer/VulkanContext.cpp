@@ -46,13 +46,13 @@ bool VulkanContext::CheckInstanceExtensionsSupport(const char* const* exts, uint
 }
 
 void VulkanContext::CreateInstance(INativeWindowSurface& surface) {
-    if constexpr (kEnableValidation) {
-        if (!CheckValidationLayerSupport())
-            throw std::runtime_error("Validation layer VK_LAYER_KHRONOS_validation not found");
+    validationEnabled_ = kEnableValidation && CheckValidationLayerSupport();
+    if (kEnableValidation && !validationEnabled_) {
+        std::cerr << "[vk] Validation layer VK_LAYER_KHRONOS_validation not found, continuing without validation.\n";
     }
 
     uint32_t extensions_count = 0;
-    char** extensions = (char**)surface.GetExtensions(&extensions_count, kEnableValidation);
+    char** extensions = (char**)surface.GetExtensions(&extensions_count, validationEnabled_);
 
     if (!CheckInstanceExtensionsSupport(extensions, extensions_count))
         throw std::runtime_error("Required instance extensions not supported");
@@ -72,17 +72,17 @@ void VulkanContext::CreateInstance(INativeWindowSurface& surface) {
     ci.ppEnabledExtensionNames = extensions;
 
     const char* layers[] = { kValidationLayerName };
-    if  constexpr (kEnableValidation) {
+    if (validationEnabled_) {
         ci.enabledLayerCount = 1;
         ci.ppEnabledLayerNames = layers;
     }
 
     VK_CHECK(vkCreateInstance(&ci, nullptr, &instance_), "vkCreateInstance failed");
 
-    std::cout << "[vk] Instance created. Validation: " << (kEnableValidation ? "ON" : "OFF") << "\n";
+    std::cout << "[vk] Instance created. Validation: " << (validationEnabled_ ? "ON" : "OFF") << "\n";
 
 #ifndef NDEBUG
-    if constexpr (kEnableValidation) SetupDebugMessenger();
+    if (validationEnabled_) SetupDebugMessenger();
 #endif
 }
 
@@ -93,7 +93,6 @@ static VKAPI_ATTR VkBool32 VKAPI_CALL DebugCallback(
     const VkDebugUtilsMessengerCallbackDataEXT* data,
     void*) 
 {
-    // warning+error enouth
     if (severity >= VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT) {
         std::cerr << "[vk validation] " << data->pMessage << "\n";
     }
@@ -137,17 +136,16 @@ void VulkanContext::SetupDebugMessenger() {
 
 void VulkanContext::DestroyInstance() {
 #ifndef NDEBUG
-    if constexpr (kEnableValidation) {
-        if (debugMessenger_) {
-            DestroyDebugUtilsMessengerEXT(instance_, debugMessenger_);
-            debugMessenger_ = VK_NULL_HANDLE;
-        }
+    if (validationEnabled_ && debugMessenger_) {
+        DestroyDebugUtilsMessengerEXT(instance_, debugMessenger_);
+        debugMessenger_ = VK_NULL_HANDLE;
     }
 #endif
     if (instance_) {
         vkDestroyInstance(instance_, nullptr);
         instance_ = VK_NULL_HANDLE;
     }
+    validationEnabled_ = false;
 }
 
 void VulkanContext::CreateSurface(INativeWindowSurface& nativeSurface) {
@@ -199,12 +197,10 @@ QueueFamilyIndices VulkanContext::FindQueueFamilies(VkPhysicalDevice dev) const 
     vkGetPhysicalDeviceQueueFamilyProperties(dev, &count, props.data());
 
     for (uint32_t i = 0; i < count; i++) {
-        // graphics?
         if (props[i].queueCount > 0 && (props[i].queueFlags & VK_QUEUE_GRAPHICS_BIT)) {
             if (out.graphics < 0) out.graphics = (int)i;
         }
-        
-        // present?
+
         VkBool32 presentSupport = VK_FALSE;
         VK_CHECK(vkGetPhysicalDeviceSurfaceSupportKHR(dev, i, surface_, &presentSupport),
                  "vkGetPhysicalDeviceSurfaceSupportKHR failed");
@@ -221,9 +217,7 @@ QueueFamilyIndices VulkanContext::FindQueueFamilies(VkPhysicalDevice dev) const 
 bool VulkanContext::IsDeviceSuitable(VkPhysicalDevice dev) const {
     const QueueFamilyIndices q = FindQueueFamilies(dev);
     if (!q.IsComplete()) return false;
-
     if (!CheckDeviceExtensionSupport(dev)) return false;
-
     return true;
 }
 
@@ -254,7 +248,6 @@ void VulkanContext::PickPhysicalDevice() {
         std::cout << "[vk] Selected GPU: " << props.deviceName << "\n";
         std::cout << "[vk] Queue families: graphics=" << graphicsFamily_
                   << " present=" << presentFamily_ << "\n";
-
         return;
     }
 
@@ -268,13 +261,11 @@ void VulkanContext::CreateDevice() {
 
     VkDeviceQueueCreateInfo qci{};
     qci.sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
-    qci.queueFamilyIndex = (uint32_t)graphicsFamily_; // = presentFamily_
+    qci.queueFamilyIndex = (uint32_t)graphicsFamily_;
     qci.queueCount = 1;
     qci.pQueuePriorities = &priority;
 
-    VkPhysicalDeviceFeatures features{}; 
-    // пока ничего не включаем. (анизотропию включим позже)
-
+    VkPhysicalDeviceFeatures features{};
     const char* exts[] = { VK_KHR_SWAPCHAIN_EXTENSION_NAME };
 
     VkDeviceCreateInfo dci{};

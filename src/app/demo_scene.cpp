@@ -120,8 +120,7 @@ void UpdateScene(Scene& scene, double time) {
     RenderObject obj1;
     obj1.mesh = &cube;
     obj1.material = &matChecher;
-    obj1.model =
-        Mat4::Translation(0,0,1.0f);
+    obj1.model = Mat4::Translation(0,0,1.0f);
     scene.objects.push_back(obj1);
 
     RenderObject obj2;

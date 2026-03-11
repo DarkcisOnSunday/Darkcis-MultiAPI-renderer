@@ -8,6 +8,7 @@ public:
     void Create(VkDevice device,
                 VkRenderPass renderPass,
                 const std::vector<VkImageView>& views,
+                VkImageView depthView,
                 VkExtent2D extent);
 
     void Destroy(VkDevice device);
