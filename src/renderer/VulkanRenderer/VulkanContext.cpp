@@ -1,5 +1,7 @@
-#include "VulkanContext.h"
 #include "platform/IPresentSurface.h"
+
+#include "VulkanContext.h"
+#include "VulkanHelpers.h"
 
 #include <vector>
 #include <cstring>
@@ -12,9 +14,6 @@ static const char* kDeviceExtensions[] = {
     VK_KHR_SWAPCHAIN_EXTENSION_NAME
 };
 
-static void VK_CHECK(VkResult r, const char* msg) {
-    if (r != VK_SUCCESS) throw std::runtime_error(msg);
-}
 
 bool VulkanContext::CheckValidationLayerSupport() const {
     uint32_t count = 0;
@@ -91,7 +90,7 @@ static VKAPI_ATTR VkBool32 VKAPI_CALL DebugCallback(
     VkDebugUtilsMessageSeverityFlagBitsEXT severity,
     VkDebugUtilsMessageTypeFlagsEXT,
     const VkDebugUtilsMessengerCallbackDataEXT* data,
-    void*) 
+    void*)
 {
     if (severity >= VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT) {
         std::cerr << "[vk validation] " << data->pMessage << "\n";
@@ -292,3 +291,45 @@ void VulkanContext::DestroyDevice() {
         presentQueue_  = VK_NULL_HANDLE;
     }
 }
+
+void VulkanContext::CreateBuffer(VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryPropertyFlags props, VkBuffer& outBuffer, VkDeviceMemory& outMemory) {
+    VkBufferCreateInfo bci{};
+    bci.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
+    bci.size = size;
+    bci.usage = usage;
+    bci.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
+    VK_CHECK(vkCreateBuffer(device_, &bci, nullptr, &outBuffer), "vkCreateBuffer failed");
+
+    VkMemoryRequirements req{};
+    vkGetBufferMemoryRequirements(device_, outBuffer, &req);
+
+    VkMemoryAllocateInfo mai{};
+    mai.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
+    mai.allocationSize = req.size;
+    mai.memoryTypeIndex = FindMemoryType(phys_, req.memoryTypeBits, props);
+    VK_CHECK(vkAllocateMemory(device_, &mai, nullptr, &outMemory), "vkAllocateMemory failed");
+    VK_CHECK(vkBindBufferMemory(device_, outBuffer, outMemory, 0), "vkBindBufferMemory failed");
+}
+
+void VulkanContext::DestroyBuffer(VkBuffer& buffer, VkDeviceMemory& memory) {
+    if (buffer != VK_NULL_HANDLE) {
+        vkDestroyBuffer(device_, buffer, nullptr);
+        buffer = VK_NULL_HANDLE;
+    }
+    if (memory != VK_NULL_HANDLE) {
+        vkFreeMemory(device_, memory, nullptr);
+        memory = VK_NULL_HANDLE;
+    }
+}
+
+VkShaderModule VulkanContext::CreateShaderModule(const std::vector<char>& code) {
+    VkShaderModuleCreateInfo ci{};
+    ci.sType = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO;
+    ci.codeSize = code.size();
+    ci.pCode = reinterpret_cast<const uint32_t*>(code.data());
+
+    VkShaderModule module = VK_NULL_HANDLE;
+    VK_CHECK(vkCreateShaderModule(device_, &ci, nullptr, &module), "vkCreateShaderModule failed");
+    return module;
+}
+

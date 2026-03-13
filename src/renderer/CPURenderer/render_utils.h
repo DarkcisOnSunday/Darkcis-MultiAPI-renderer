@@ -1,9 +1,9 @@
 #pragma once
 
-#include "gfx/vertex.h"
 #include "render/camera.h"
 #include "render/viewport.h"
 #include "core/lerp.h"
+#include "core/vertex.h"
 #include "core/color.h"
 
 #include <vector>

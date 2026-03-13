@@ -1,6 +1,6 @@
 #pragma once
 
-#include "gfx/vertex.h"
+#include "core/vertex.h"
 
 #include <cstdint>
 #include <vector>

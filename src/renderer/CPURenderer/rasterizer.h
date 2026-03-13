@@ -1,7 +1,7 @@
 #pragma once
 
 #include <cstdint>
-#include "gfx/vertex.h"
+#include "core/vertex.h"
 
 class FrameBuffer;
 struct Material;

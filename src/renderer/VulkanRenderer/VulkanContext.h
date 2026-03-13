@@ -7,6 +7,7 @@ constexpr bool kEnableValidation = false;
 #endif
 
 #include <vulkan/vulkan.h>
+#include <vector>
 
 struct INativeWindowSurface;
 
@@ -41,6 +42,10 @@ public:
     VkDevice GetDevice() const { return device_; }
     VkQueue GetGraphicsQueue() const { return graphicsQueue_; }
     VkQueue GetPresentQueue() const { return presentQueue_; }
+
+    void CreateBuffer(VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryPropertyFlags props, VkBuffer& outBuffer, VkDeviceMemory& outMemory);
+    void DestroyBuffer(VkBuffer& buffer, VkDeviceMemory& memory);
+    VkShaderModule CreateShaderModule(const std::vector<char>& code);
 
 private:
     void SetupDebugMessenger();
