@@ -565,7 +565,6 @@ GpuMeshRef VulkanRendererBackend::EnsureGpuMesh(const Mesh& mesh) {
     }
 
     VkDevice device = vulkanCtx_.GetDevice();
-    VkPhysicalDevice phys = vulkanCtx_.GetPhysicalDevice();
 
     vulkanCtx_.CreateBuffer(
                  sizeof(Vertex3D) * mesh.vertices.size(),

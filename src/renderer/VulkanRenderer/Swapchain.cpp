@@ -124,7 +124,8 @@ void Swapchain::Create(VulkanContext& ctx, uint32_t w, uint32_t h) {
              "vkGetSwapchainImagesKHR(data) failed");
 
     renderFinished_.resize(images_.size());
-    VkSemaphoreCreateInfo sci{ VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO };
+    VkSemaphoreCreateInfo sci{};
+    sci.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;
     for (size_t i=0;i<renderFinished_.size();++i)
         VK_CHECK(vkCreateSemaphore(device, &sci, nullptr, &renderFinished_[i]),
                 "vkCreateSemaphore renderFinished failed");
