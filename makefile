@@ -2,9 +2,13 @@ VULKAN_SDK ?= G:/LowLevel/Vulkan-1.4.328.1
 PLATFORM ?= win32
 
 CXX = g++
-CXXFLAGS = -std=c++17 -Wall -Wextra -Isrc -Iexternal -I$(VULKAN_SDK)/Include -static-libgcc -static-libstdc++
+CXXFLAGS = -std=c++17 -Wall -Wextra -Isrc -Iexternal/DcisML/include -I$(VULKAN_SDK)/Include -static-libgcc -static-libstdc++
 LDFLAGS = -Lexternal/DcisML/lib -lDcisML -L$(VULKAN_SDK)/Lib -static -static-libgcc -static-libstdc++
 LDLIBS = -lvulkan-1
+MAKE = mingw32-make
+
+DCISML_DIR = external/DcisML
+DCISML_TARGET = $(DCISML_DIR)/lib/libDcisML.a
 
 SRC_DIR = src
 BUILD_DIR = build
@@ -53,7 +57,12 @@ DEP_FILES = $(OBJ_FILES:.o=.d)
 
 all: $(TARGET)
 
-$(TARGET): $(OBJ_FILES)
+dcisml:
+	$(MAKE) -C $(DCISML_DIR) PLATFORM=$(PLATFORM) VULKAN_SDK=$(VULKAN_SDK)
+
+$(DCISML_TARGET): dcisml
+
+$(TARGET): $(OBJ_FILES) $(DCISML_TARGET)
 	$(CXX) $(CXXFLAGS) -o $@ $(OBJ_FILES) $(LDFLAGS) $(LDLIBS)
 
 $(BUILD_DIR)/%.o: $(SRC_DIR)/%.cpp
@@ -63,9 +72,10 @@ $(BUILD_DIR)/%.o: $(SRC_DIR)/%.cpp
 -include $(DEP_FILES)
 
 clean:
+	$(MAKE) -C $(DCISML_DIR) clean
 	@if exist $(BUILD_DIR) rmdir /s /q $(BUILD_DIR)
 
 run: $(TARGET)
 	$(TARGET)
 
-.PHONY: all clean run
+.PHONY: all clean dcisml run

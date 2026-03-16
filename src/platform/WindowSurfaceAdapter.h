@@ -2,7 +2,7 @@
 #include <cstdint>
 
 #include "platform/IPresentSurface.h"
-#include "DcisML/include/window.h"
+#include "window.h"
 
 class WindowSurfaceAdapter final : public INativeWindowSurface {
 public:

@@ -1,6 +1,6 @@
 #define _USE_MATH_DEFINES
 
-#include "DcisML/include/window.h"
+#include "window.h"
 
 #include "core/scene.h"
 #include "render/camera.h"
